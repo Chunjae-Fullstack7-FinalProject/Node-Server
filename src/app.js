@@ -4,9 +4,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const { createServer } = require("http");
-const WebSocket = require("ws");
-const { initWebSocket } = require('./service/websocket.service');
-const examRoutes = require('./routes/exam.routes');
+const { Server } = require("socket.io");
+const { initWebSocket } = require("./service/websocket.service");
+const examRoutes = require("./routes/exam.routes");
 
 const app = express();
 const httpServer = createServer(app);
@@ -25,6 +25,7 @@ app.use(
     credentials: true,
   })
 );
+
 // json 파서
 app.use(express.json());
 // 쿠키 파서
@@ -33,13 +34,10 @@ app.use(cookieParser());
 // 라우터
 app.use("/api/exams", examRoutes);
 
+//Socket.IO 초기화
+initWebSocket(io);
 
-
-
-// WebSocket 초기화
-initWebSocket(wss);
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3443;
 httpServer.listen(PORT, () => {
   console.log(`서버 실행 중 포트 : ${PORT}`);
 });

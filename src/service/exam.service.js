@@ -39,12 +39,24 @@ class ExamService {
       return null;
     }
 
-    const examTime = parseInt(process.env.EXAM_TIME);
-    const userExamTime = examTime - progress.totalSpentTime;
+    const now = new Date();
+    const examTime = parseInt(process.env.EXAM_TIME); // 총 시험 시간 (분)
+    let totalSpentTime = progress.totalSpentTime; // 이전까지 누적된 시간
+
+    // 마지막 활동 이후 경과 시간 계산 (분 단위)
+    if (progress.lastActiveTime) {
+      const additionalTime = Math.floor((now - progress.lastActiveTime) / (1000 * 60));
+      totalSpentTime += additionalTime;
+    }
+
+    // 남은 시험 시간 계산
+    const userExamTime = Math.max(0, examTime - totalSpentTime);
 
     return {
-      time: progress.timestamp,
-      userExamTime,
+      examStartTime: progress.timestamp, // 최초 시험 시작 시간
+      lastActiveTime: progress.lastActiveTime, // 마지막 활동 시간
+      totalSpentTime: totalSpentTime, // 총 사용 시간
+      userExamTime: userExamTime, // 남은 시험 시간
       isTimeOver: userExamTime <= 0
     };
   }
