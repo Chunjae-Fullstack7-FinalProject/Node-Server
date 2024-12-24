@@ -1,22 +1,39 @@
 const jwt = require("jsonwebtoken");
 
+// 시크릿 키 처리 과정 로깅
+const secretKeyString = process.env.JWT_SECRET;
+
+//그냥 토큰 검증
+try{
+    const testDecoded = jwt.verify("eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyMSIsIm5hbWUiOiLqsJXqsr3rr7wiLCJpYXQiOjE3MzUwMDE1MjYsImV4cCI6MTczNTAwMzMyNn0.XxdcRl7x1iybmXRDN0QRWn7_NIfILl-yQ80Ebi2pO4ziVXZRhs8hyYZlnGAT6imSvNrCcR6AfJROTQ6Zu2Dvzw", process.env.JWT_SECRET);
+    console.log("testDecoded:", testDecoded);
+}catch(err){
+    console.log(err);
+}
+
 exports.authMiddleware = (req, res, next) => {
     try {
-        const token = req.cookies[process.env.JWT_COOKIE_NAME];
-        console.log(token);
+        const token = req.cookies['access_token'];
+        
         if (!token) {
             return res
                 .status(401)
                 .json({ message: "유효하지 않은 토큰입니다." });
         }
-
-        // JWT 검증
+        
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
         req.userId = decoded.sub;
-        console.log(req.userId);
+        req.userName = decoded.name;
         next();
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
+            console.error("토큰 검증 실패:", {
+                name: error.name,
+                message: error.message,
+                tokenPreview: error.token ? `${error.token.substring(0, 20)}...` : 'none',
+                secretKeyString: secretKeyString.substring(0, 20) + '...'
+            });
             return res
                 .status(401)
                 .json({ message: "유효하지 않은 토큰입니다." });
@@ -27,26 +44,38 @@ exports.authMiddleware = (req, res, next) => {
 };
 
 exports.wsAuthMiddleware = (socket, next) => {
+    let token;
+    console.log('socket.handshake.headers.cookie:', socket.handshake.headers.cookie);
     try {
         const cookies = socket.handshake.headers.cookie;
         if (!cookies) {
             return next(new Error("인증이 필요합니다."));
         }
 
-        const token = cookies
-            .split(";")
-            .find((c) => c.trim().startsWith(`${process.env.JWT_COOKIE_NAME}=`))
-            ?.split("=")[1];
+        token = cookies
+            .split(';')
+            .map(cookie => cookie.trim())
+            .find(cookie => cookie.startsWith('access_token='))
+            ?.split('=')[1];
 
         if (!token) {
             return next(new Error("토큰이 없습니다."));
         }
+        console.log("=============================");
+        console.log('token:', token);
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
         socket.userId = decoded.sub;
+        socket.userName = decoded.name;
         next();
     } catch (error) {
-        console.error("WebSocket 인증 오류:", error);
+        console.error("WebSocket 인증 오류:", {
+            name: error.name,
+            message: error.message,
+            tokenPreview: token ? `${token.substring(0, 20)}...` : 'none',
+            secretKeyString: secretKeyString.substring(0, 20) + '...'
+        });
         next(new Error("인증에 실패했습니다."));
     }
 };
