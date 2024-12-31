@@ -2,36 +2,21 @@ const mongoose = require("mongoose");
 
 // 개별 문제 답안 스키마
 const examQuestionSchema = new mongoose.Schema({
-  questionId: {
+  itemId: {
     type: Number,
     required: true,
   },
   answer: {
-    type: String,
-    default: "",
+    type: [String],
+    default: [],
   },
-  spentTime: {
+  timeSpent: {
     type: Number,
     default: 0,
   },
 });
 
 // 시험 진행 상태 스키마
-/**
-{
-    "examId": Long,
-    "userId": String,
-    "examQuestions": [
-        {
-            "questionId": Long,
-            "answer": String,
-            "spentTime": Long
-        }
-    ],
-    "lastQuestionId": Long,
-    "timestamp": Date
-}
- */
 const examProgressSchema = new mongoose.Schema({
   examId: {
     type: Number,

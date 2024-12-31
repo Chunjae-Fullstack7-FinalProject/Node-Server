@@ -1,4 +1,7 @@
+//개발시
 require('dotenv').config();
+//배포시
+// require('dotenv').config({ path: '../.env' }); 
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");

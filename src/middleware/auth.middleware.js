@@ -3,14 +3,6 @@ const jwt = require("jsonwebtoken");
 // 시크릿 키 처리 과정 로깅
 const secretKeyString = process.env.JWT_SECRET;
 
-//그냥 토큰 검증
-try{
-    const testDecoded = jwt.verify("eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyMSIsIm5hbWUiOiLqsJXqsr3rr7wiLCJpYXQiOjE3MzUwMDE1MjYsImV4cCI6MTczNTAwMzMyNn0.XxdcRl7x1iybmXRDN0QRWn7_NIfILl-yQ80Ebi2pO4ziVXZRhs8hyYZlnGAT6imSvNrCcR6AfJROTQ6Zu2Dvzw", process.env.JWT_SECRET);
-    console.log("testDecoded:", testDecoded);
-}catch(err){
-    console.log(err);
-}
-
 exports.authMiddleware = (req, res, next) => {
     try {
         const token = req.cookies['access_token'];
@@ -45,7 +37,7 @@ exports.authMiddleware = (req, res, next) => {
 
 exports.wsAuthMiddleware = (socket, next) => {
     let token;
-    console.log('socket.handshake.headers.cookie:', socket.handshake.headers.cookie);
+    // console.log('socket.handshake.headers.cookie:', socket.handshake.headers.cookie);
     try {
         const cookies = socket.handshake.headers.cookie;
         if (!cookies) {

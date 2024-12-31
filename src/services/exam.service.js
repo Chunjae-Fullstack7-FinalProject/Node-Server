@@ -33,36 +33,53 @@ class ExamService {
             { upsert: true }
         );
     }
-
+    
     // 남은 시간 조회
     async getTime(examId, userId) {
-        const progress = await ExamProgress.findOne({ userId, examId });
+        const progress = await ExamProgress.findOne({ examId, userId });
         if (!progress) {
             return null;
         }
 
         const now = new Date();
         const examTime = parseInt(process.env.EXAM_TIME); // 총 시험 시간 (분)
-        let totalSpentTime = progress.totalSpentTime; // 이전까지 누적된 시간
 
-        // 마지막 활동 이후 경과 시간 계산 (분 단위)
-        if (progress.lastActiveTime) {
-            const additionalTime = Math.floor(
-                (now - progress.lastActiveTime) / (1000 * 60)
-            );
-            totalSpentTime += additionalTime;
-        }
+        // 시험 시작 시간부터 현재까지의 총 경과 시간 계산 (분 단위)
+        const totalElapsedTime =
+            (now - new Date(progress.timestamp)) / (1000 * 60);
 
-        // 남은 시험 시간 계산
-        const userExamTime = Math.max(0, examTime - totalSpentTime);
+        // 남은 시험 시간 계산 (소수점 두 자리까지)
+        const userExamTime = Math.max(0, examTime - totalElapsedTime).toFixed(
+            2
+        );
+
+        console.log("시간 계산 디버깅:", {
+            now: now.toISOString(),
+            examStartTime: progress.timestamp,
+            totalElapsedTime,
+            examTime,
+            userExamTime,
+        });
 
         return {
-            examStartTime: progress.timestamp, // 최초 시험 시작 시간
-            lastActiveTime: progress.lastActiveTime, // 마지막 활동 시간
-            totalSpentTime: totalSpentTime, // 총 사용 시간
-            userExamTime: userExamTime, // 남은 시험 시간
+            examStartTime: progress.timestamp,
+            lastActiveTime: now,
+            totalSpentTime: totalElapsedTime,
+            userExamTime: parseFloat(userExamTime),
             isTimeOver: userExamTime <= 0,
         };
+    }
+
+    // 만료된 시험 데이터 삭제
+    async deleteExpiredExam(examId, userId) {
+        try {
+            const result = await ExamProgress.deleteOne({ examId, userId });
+            console.log(`시험 데이터 삭제 완료 - examId: ${examId}, userId: ${userId}, deleted: ${result.deletedCount}`);
+            return result.deletedCount > 0;
+        } catch (error) {
+            console.error("시험 데이터 삭제 오류:", error);
+            throw error;
+        }
     }
 }
 
