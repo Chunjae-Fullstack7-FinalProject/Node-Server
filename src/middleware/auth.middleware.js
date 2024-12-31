@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const secretKeyString = process.env.JWT_SECRET;
 
 exports.authMiddleware = (req, res, next) => {
+    console.log('req.cookies:', req.cookies);
     try {
         const token = req.cookies['access_token'];
         

@@ -16,6 +16,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL,
+    // origin: 'http://localhost:8080',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -30,6 +31,7 @@ mongoose.connect(process.env.MONGO_URI)
 // 기본 미들웨어
 app.use(cors({
   origin: process.env.CLIENT_URL,
+  // origin: 'http://localhost:8080',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
